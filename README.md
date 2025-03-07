@@ -61,6 +61,11 @@ To use AbuseIPDB API, replace `YOUR_ABUSEIPDB_API_KEY` in `threatcheck.py` with 
 
 ---
 
+---
+## Future Features 
+Enhance the solution by integrating AI capabilities, enabling the application to leverage a Generative AI model for analyzing responses from OSINT tools.
+---
+
 ## Contributors
 👤 **Abderrezzaq Messedad**  
 📧 Contact: a.messedad@gmail.com
