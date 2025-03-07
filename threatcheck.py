@@ -4,7 +4,7 @@ from flask import Flask, render_template, jsonify, request
 import docker
 
 # AbuseIPDB API Key (Replace with your own API Key)
-API_KEY = "0ec99fe2f87dcd08effdda2a0a4d45c68a98fe5a6a4fdfe716a8551cb7b7bb8d309e04a38225cdc0"
+API_KEY = "YOUR ABUSEIPDB API KEY"
 ABUSEIPDB_URL = "https://api.abuseipdb.com/api/v2/check"
 
 # Flask App
