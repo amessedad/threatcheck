@@ -1,1 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Threat Check (AbuseIPDB)</title>
+    <script>
+        function scanNetwork() {
+            fetch('/scan')
+                .then(response => response.json())
+                .then(data => {
+                    let resultDiv = document.getElementById('results');
+                    resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                });
+        }
+
+        function checkIP() {
+            let ip = document.getElementById('ipInput').value.trim();
+            let ipResultDiv = document.getElementById('ipResults');
+            
+            if (!validateIP(ip)) {
+                ipResultDiv.innerHTML = '<p style="color: red;">Invalid IP address format.</p>';
+                return;
+            }
+
+            ipResultDiv.innerHTML = '<p>Checking IP reputation...</p>';
+
+            fetch('/check_ip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip: ip })
+            })
+            .then(response => response.json())
+            .then(data => {
+                ipResultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                ipResultDiv.innerHTML = '<p style="color: red;">Error fetching data.</p>';
+            });
+        }
+
+        function validateIP(ip) {
+            let ipPattern = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$/;
+            return ipPattern.test(ip);
+        }
+    </script>
+</head>
+<body>
+    <h1>Network Security Scanner</h1>
+    
+    <button onclick="scanNetwork()">Scan Network</button>
+    <div id="results"></div>
+
+    <h2>Check IP Reputation</h2>
+    <input type="text" id="ipInput" placeholder="Enter IP address">
+    <button onclick="checkIP()">Check IP</button>
+    <div id="ipResults"></div>
+</body>
+</html>
 
