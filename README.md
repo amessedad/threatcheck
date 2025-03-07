@@ -17,8 +17,8 @@ This tool is a Python-based web application that:
 
 ### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/yourusername/network-security-scanner.git
-cd network-security-scanner
+git clone https://github.com/amessedad/threatcheck.git
+cd threatcheck
 ```
 
 ### 2️⃣ Install Dependencies
