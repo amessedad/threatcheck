@@ -57,7 +57,7 @@ Access the web UI at:
 ---
 
 ## Configuration
-To use AbuseIPDB API, replace `YOUR_ABUSEIPDB_API_KEY` in `app.py` with your own API key.
+To use AbuseIPDB API, replace `YOUR_ABUSEIPDB_API_KEY` in `threatcheck.py` with your own API key.
 
 ---
 
