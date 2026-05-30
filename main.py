@@ -1,5 +1,31 @@
 from fastapi import FastAPI, HTTPException
-import httpx
+import httpx, ipaddress
+
+def validate_public_ip(ip: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address:
+    """Validate that the input is a real, public IP. Raises HTTPException(400) on failure."""
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"'{ip}' is not a valid IP address",
+        )
+
+    if (
+        addr.is_private
+        or addr.is_loopback
+        or addr.is_reserved
+        or addr.is_link_local
+        or addr.is_multicast
+        or addr.is_unspecified
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail=f"'{ip}' is not a public, routable IP address",
+        )
+
+    return addr
+
 
 app = FastAPI()
 
@@ -10,6 +36,8 @@ def health():
 
 @app.get("/api/shodan/{ip}")
 async def shodan_lookup(ip: str):
+    validate_public_ip(ip)    # raises 400 if invalid or non-public; safe to proceed otherwise
+    
     url = f"https://internetdb.shodan.io/{ip}"
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
