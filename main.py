@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
-import httpx, ipaddress
+from dotenv import load_dotenv
+import httpx, ipaddress, os
 
 def validate_public_ip(ip: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address:
     """Validate that the input is a real, public IP. Raises HTTPException(400) on failure."""
@@ -26,6 +27,7 @@ def validate_public_ip(ip: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address
 
     return addr
 
+load_dotenv()   # Load .env into os.environ at startup (local dev only; no-op in Docker
 
 app = FastAPI()
 
@@ -51,3 +53,34 @@ async def shodan_lookup(ip: str):
         raise HTTPException(status_code=502, detail="Shodan returned an error")
 
     return {"ip": ip, "found": True, "data": response.json()}
+
+@app.get("/api/abuseipdb/{ip}")
+async def abuseipdb_lookup(ip: str):
+    validate_public_ip(ip)   # reuses TC-3's helper — DRY in action
+
+    api_key = os.environ.get("ABUSEIPDB_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=500,
+            detail="ABUSEIPDB_KEY is not configured on the server",
+        )
+
+    url = "https://api.abuseipdb.com/api/v2/check"
+    headers = {"Key": api_key, "Accept": "application/json"}
+    params = {"ipAddress": ip, "maxAgeInDays": 90}
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(url, headers=headers, params=params)
+    except httpx.RequestError:
+        raise HTTPException(status_code=502, detail="Could not reach AbuseIPDB")
+
+    if response.status_code in (401, 403):
+        raise HTTPException(status_code=500, detail="AbuseIPDB authentication failed")
+    if response.status_code == 429:
+        raise HTTPException(status_code=502, detail="AbuseIPDB rate limit reached")
+    if response.status_code != 200:
+        raise HTTPException(status_code=502, detail="AbuseIPDB returned an error")
+
+    return {"ip": ip, "data": response.json().get("data", {})}
+
