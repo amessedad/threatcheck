@@ -1,3 +1,5 @@
+> 🚧 Under active rebuild: migrating from v0.1 (Flask) to v2.0 (FastAPI). README being updated.
+
 # # ThreatCheck V0.1 (OSNIT)
 
 ## Overview
