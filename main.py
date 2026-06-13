@@ -1,6 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from dotenv import load_dotenv
-import httpx, ipaddress, os,asyncio
+import httpx, ipaddress, os, asyncio
+
+load_dotenv()   # Load .env into os.environ at startup (local dev only; no-op in Docker)
+
 
 def validate_public_ip(ip: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address:
     """Validate that the input is a real, public IP. Raises HTTPException(400) on failure."""
@@ -26,8 +29,6 @@ def validate_public_ip(ip: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address
         )
 
     return addr
-
-load_dotenv()   # Load .env into os.environ at startup (local dev only; no-op in Docker
 
 async def fetch_shodan(ip: str) -> dict:
     """Query Shodan InternetDB. Returns {"found": bool, "data": dict | None}.
@@ -131,6 +132,8 @@ async def virustotal_lookup(ip: str):
     validate_public_ip(ip)
     result = await fetch_virustotal(ip)
     return {"ip": ip, **result}
+
+
 @app.get("/api/lookup/{indicator}")
 async def unified_lookup(indicator: str):
     addr = validate_public_ip(indicator)
@@ -158,32 +161,3 @@ async def unified_lookup(indicator: str):
         },
     }
     
-@app.get("/api/lookup/{indicator}")
-async def unified_lookup(indicator: str):
-    addr = validate_public_ip(indicator)
-    ioc_type = "ipv4" if isinstance(addr, ipaddress.IPv4Address) else "ipv6"
-
-    shodan_result, abuseipdb_result = await asyncio.gather(
-        fetch_shodan(indicator),
-        fetch_abuseipdb(indicator),
-        return_exceptions=True,
-    )
-
-    def shape(result):
-        if isinstance(result, Exception):
-            return {"status": "error", "error": getattr(result, "detail", str(result))}
-        return {"status": "ok", "result": result}
-
-    return {
-        "indicator": indicator,
-        "type": ioc_type,
-        "sources": {
-            "shodan": shape(shodan_result),
-            "abuseipdb": shape(abuseipdb_result),
-        },
-    }
-
-
-
-
-
